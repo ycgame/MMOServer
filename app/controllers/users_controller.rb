@@ -19,6 +19,21 @@ class UsersController < ApplicationController
     end
   end
 
+  def login
+
+    # 今はパスワードは無視
+    
+    if @user == nil
+      render :json => {status: 404, :message => "ユーザーが存在しません"}
+      return
+    end
+
+    @user.update(token: SecureRandom.urlsafe_base64)
+
+    render :json => @user
+
+  end
+
   def show
 
     if @user == nil

@@ -5,5 +5,7 @@ Rails.application.routes.draw do
 
   # User model
   resources :users
+  # Login
+  post '/users/:id/login' => 'users#login'
 
 end
