@@ -19,7 +19,7 @@ class DungeonChannel < ApplicationCable::Channel
   def auth(data)
 
     id    = data["id"]
-    token = data["token"] #今はTokenは無視(aaaという文字列)
+    token = data["token"]
 
     @user  = User.find_by_id(id)
     @token = @user.token
@@ -50,7 +50,9 @@ class DungeonChannel < ApplicationCable::Channel
     {
       user: @redis.get(uuid), # Redisに保存されているUserデータ
       x: data["x"], 
-      y: data["y"]
+      y: data["y"],
+      pos_x: data["pos_x"],
+      pos_y: data["pos_y"]
     }
   end
 end
