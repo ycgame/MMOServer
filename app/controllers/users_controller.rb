@@ -1,12 +1,16 @@
 # -*- coding: utf-8 -*-
 class UsersController < ApplicationController
 
-  before_action :set_user, except: [:index, :create, :new]
-
+  before_action :set_salt
+  before_action :set_user, except: [:create]
+  
   def create
-
-    @user = User.new(user_params)
-
+    
+    name     = user_params[:name]
+    password = user_params[:password].crypt(@salt)
+    
+    @user = User.new({name: name, password: password})
+    
     if @user[:name] == nil
       render :json => @user.to_json({:status => 403, :message => "nameパラメータを指定してください"})
       return
@@ -21,13 +25,6 @@ class UsersController < ApplicationController
 
   def login
 
-    # 今はパスワードは無視
-    
-    if @user == nil
-      render :json => {status: 404, :message => "ユーザーが存在しません"}
-      return
-    end
-
     @user.update(token: SecureRandom.urlsafe_base64)
 
     render :json => @user
@@ -35,23 +32,32 @@ class UsersController < ApplicationController
   end
 
   def show
-
-    if @user == nil
-      render :json => {status: 404, :message => "ユーザーが存在しません"}
-      return
-    end
-
     render :json => @user
   end
   
   private
 
   def set_user
+    
     @user = User.find_by_id(params[:id])
+    
+    if @user == nil
+      render :json => {status: 404, :message => "ユーザーが存在しません"}
+    end
+    
+    password = user_params[:password].crypt(@user[:password])
+    
+    if password != @user[:password]
+      render :json => {:status => 403, :message => "認証に失敗しました"}
+    end
+  end
+  
+  def set_salt
+    @salt = [rand(64),rand(64)].pack("C*").tr("\x00-\x3f","A-Za-z0-9./")
   end
 
   def user_params
-    params.permit(:name)
+    params.permit(:id, :name, :password)
   end
 
 end
