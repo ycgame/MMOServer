@@ -43,12 +43,19 @@ class UsersController < ApplicationController
     
     if @user == nil
       render :json => {status: 404, :message => "ユーザーが存在しません"}
+      return
+    end
+
+    if user_params == nil
+      render :json => {status: 403, :message => "パラメータが指定されていません"}
+      return
     end
     
     password = user_params[:password].crypt(@user[:password])
     
     if password != @user[:password]
       render :json => {:status => 403, :message => "認証に失敗しました"}
+      return
     end
   end
   
