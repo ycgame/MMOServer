@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 class DungeonChannel < ApplicationCable::Channel
 
+  # ダンジョンを形成するサーバー
+
   def subscribed
 
     # Redisをセットアップ
@@ -16,11 +18,25 @@ class DungeonChannel < ApplicationCable::Channel
     @redis.set(uuid, nil)
   end
 
+  def mm_auth(data)
+    
+    stoken = data["stoken"]
+    
+    if stoken == "aaa"
+      @redis.set('mm', uuid)
+      DungeonChannel.broadcast_to(@redis.get('mm'), {log: "Connect OK"})
+      ActionCable.server.broadcast "dungeon_channel",
+      {
+        log: "Connect OK2"
+      }
+    end
+  end
+  
   def auth(data)
-
+    
     id    = data["id"]
     token = data["token"]
-
+    
     @user  = User.find_by_id(id)
     @token = @user.token
     
@@ -31,8 +47,17 @@ class DungeonChannel < ApplicationCable::Channel
       @redis.set(uuid, @user.to_json)
 
       # 認証成功を伝える
+      # ここですべてのユーザーの情報とモンスターの情報を伝える(未実装)
       stream_for @user
       DungeonChannel.broadcast_to(@user, {status: 0})
+
+      # MMと他のユーザーに伝える
+      ActionCable.server.broadcast "dungeon_channel",
+      {
+        user: @redis.get(uuid),
+        x: data["x"],
+        y: data["y"],
+      }
     end
   end
 
@@ -55,4 +80,13 @@ class DungeonChannel < ApplicationCable::Channel
       pos_y: data["pos_y"]
     }
   end
+
+  # モンスターをターゲットに取ったということを伝える
+  def target(data)
+  end
+
+  # モンスターのステータスを伝える?
+  def status
+  end
+
 end

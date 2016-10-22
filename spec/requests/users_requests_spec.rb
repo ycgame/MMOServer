@@ -4,7 +4,7 @@ require 'rails_helper'
 RSpec.describe UsersController, type: :request do
 
   before do
-    @user = User.create(name: "testuser")
+    @user = User.create(name: "testuser", token: "aaa")
   end
 
   describe 'POST #create' do
@@ -32,30 +32,17 @@ RSpec.describe UsersController, type: :request do
     end
   end
 
-  describe 'POST #login' do
-    
-    it 'ログインしてTokenを取得', autodoc: true do
-      post '/users/1/login' #ここでパスワードを送信する(未実装)
-      expect(response).to have_http_status(200)
-      json = JSON.parse(response.body)
-      expect(json["status"]).to eq(200)
-    end
-
-    #ログイン失敗テスト
-
-  end
-
   describe 'GET #show' do
 
     it 'ユーザーの情報を取得', autodoc: true do
-      get '/users/1'
+      get '/users/1?token=aaa'
       expect(response).to have_http_status(200)
       json = JSON.parse(response.body)
       expect(json["status"]).to eq(200)
     end
 
     it 'ユーザーが存在しない' do
-      get '/users/3'
+      get '/users/3?token=bbb'
       expect(response).to have_http_status(200)
       json = JSON.parse(response.body)
       expect(json["status"]).to eq(404)

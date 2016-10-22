@@ -4,8 +4,6 @@ Rails.application.routes.draw do
   mount ActionCable.server => '/cable'
 
   # User model
-  resources :users
-  # Login
-  post '/users/:id/login' => 'users#login'
+  resources :users, only: [:create, :show]
 
 end

@@ -50,3 +50,5 @@ group :development, :test do
   gem 'rspec-rails'
   gem 'autodoc'
 end
+
+gem 'unicorn'

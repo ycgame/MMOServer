@@ -1,34 +1,21 @@
 # -*- coding: utf-8 -*-
 class UsersController < ApplicationController
 
-  before_action :set_salt
   before_action :set_user, except: [:create]
   
   def create
+    name  = user_params[:name]
+    token = SecureRandom.urlsafe_base64
     
-    name     = user_params[:name]
-    password = user_params[:password].crypt(@salt)
+    @user = User.new(name: name, token: token)
     
-    @user = User.new({name: name, password: password})
+    return render :json => @user.to_json({:status => 403, :message => "nameパラメータを指定してください"}) if @user[:name] == nil
     
-    if @user[:name] == nil
-      render :json => @user.to_json({:status => 403, :message => "nameパラメータを指定してください"})
-      return
-    end
-
     if @user.save
       render :json => @user
     else
       render :json => @user.to_json({:status => 403, :message => "名前が使用できません"})
     end
-  end
-
-  def login
-
-    @user.update(token: SecureRandom.urlsafe_base64)
-
-    render :json => @user
-
   end
 
   def show
@@ -37,34 +24,16 @@ class UsersController < ApplicationController
   
   private
 
+  def user_params
+    params.permit(:id, :name, :token)
+  end
+
   def set_user
-    
     @user = User.find_by_id(params[:id])
     
-    if @user == nil
-      render :json => {status: 404, :message => "ユーザーが存在しません"}
-      return
-    end
-
-    if user_params == nil
-      render :json => {status: 403, :message => "パラメータが指定されていません"}
-      return
-    end
-    
-    password = user_params[:password].crypt(@user[:password])
-    
-    if password != @user[:password]
-      render :json => {:status => 403, :message => "認証に失敗しました"}
-      return
-    end
-  end
-  
-  def set_salt
-    @salt = [rand(64),rand(64)].pack("C*").tr("\x00-\x3f","A-Za-z0-9./")
-  end
-
-  def user_params
-    params.permit(:id, :name, :password)
+    return render :json => {status: 404, :message => "ユーザーが存在しません"} if @user == nil
+    return render :json => {status: 403, :message => "パラメータが指定されていません"} if user_params == nil
+    return render :json => {status: 403, :message => "正しいトークンを指定してください"} if @user[:token] != user_params[:token]
   end
 
 end
